@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বাইক ডিজিটাল মিটার</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 400px;
+            border-top: 6px solid #6c2bd9;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #3b1d82;
+            margin: 0;
+            font-size: 20px;
+        }
+        .secret-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* ==================== বড় ডিজিটাল মিটার বক্স ==================== */
+        .gps-panel {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 18px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+            text-align: center;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.6);
+            border: 2px solid #334155;
+        }
+        .gps-status {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.active {
+            background-color: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* বড় বক্সের গ্রিড ডিজাইন */
+        .live-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 16px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        /* অতিক্রান্ত কি.মি. বক্সটি সবচেয়ে বড় (পুরো লাইন জুড়ে) */
+        .stat-box.main-km {
+            grid-column: span 2;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 20px 10px;
+        }
+        .stat-val {
+            font-size: 36px;
+            font-weight: 800;
+            color: #38bdf8;
+            display: block;
+            line-height: 1.1;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+        .stat-box.main-km .stat-val {
+            font-size: 52px; /* কি.মি. লেখাটি সবচেয়ে বড় */
+            color: #38bdf8;
+        }
+        .stat-val.fuel-live {
+            color: #fbbf24; /* তেল খরচের রঙ হলুদ-সোনালী */
+        }
+        .stat-val.speed-live {
+            color: #4ade80; /* স্পিডের রঙ সবুজ */
+        }
+        .stat-lbl {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .gps-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-gps {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+        }
+        .btn-start { background-color: #16a34a; }
+        .btn-stop { background-color: #dc2626; display: none; }
+        .btn-reset { background-color: #475569; }
+
+        /* Inputs & Buttons */
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .input-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            color: #1e293b;
+            outline: none;
+            background: #fff;
+        }
+        input[type="number"]:focus {
+            border-color: #6c2bd9;
+        }
+        .btn-calc {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(90deg, #6c2bd9, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(108, 43, 217, 0.3);
+        }
+
+        /* Result Boxes */
+        .result-box {
+            margin-top: 16px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #334155;
+        }
+        .fare-highlight {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 19px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .profit-highlight {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px dashed #cbd5e1;
+            font-size: 19px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            cursor: pointer;
+        }
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            accent-color: #6c2bd9;
+        }
+        .hidden-page {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-bar">
+        <h2 id="pageTitle">বাইক ডিজিটাল মিটার</h2>
+        <button class="secret-btn" id="togglePageBtn" onclick="switchPage()">🔒 ড্রাইভার পেজ</button>
+    </div>
+
+    <!-- ==================== পেজ ১: যাত্রীর পেজ (Public) ==================== -->
+    <div id="passengerPage">
+        <div class="gps-panel">
+            <div class="gps-status">
+                <span class="dot" id="gpsDot"></span>
+                <span id="gpsStatusText">GPS রেডি আছে</span>
+            </div>
+
+            <!-- বড় ডিজিটাল বক্স -->
+            <div class="live-stats">
+                <div class="stat-box main-km">
+                    <span class="stat-val" id="liveDist">0.00</span>
+                    <span class="stat-lbl">অতিক্রান্ত কি.মি.</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val fuel-live" id="liveFuelCost">0</span>
+                    <span class="stat-lbl">তেল খরচ (টাকা)</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val speed-live" id="liveSpeed">0</span>
+                    <span class="stat-lbl">স্পিড (km/h)</span>
+                </div>
+            </div>
+
+            <div class="gps-btns">
+                <button class="btn-gps btn-start" id="startBtn" onclick="startGPS()">▶ ট্রিপ শুরু</button>
+                <button class="btn-gps btn-stop" id="stopBtn" onclick="stopGPS()">⏹ ট্রিপ শেষ</button>
+                <button class="btn-gps btn-reset" onclick="resetGPS()">↺ রিসেট</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>অতিক্রান্ত দূরত্ব (কি.মি.)</label>
+            <input type="number" id="distance" placeholder="GPS বা হাতে লিখুন (যেমন: ১০)" step="any" oninput="calculateAll()">
+        </div>
+
+        <button class="btn-calc" onclick="calculateAll()">ট্রিপের বিবরণ দেখুন</button>
+
+        <div class="result-box" id="passengerResultBox">
+            <div class="result-item">
+                <span>মোট অতিক্রান্ত দূরত্ব:</span>
+                <strong id="pDistText">০ কি.মি.</strong>
+            </div>
+            <div class="result-item">
+                <span>জ্বালানি (তেল) লেগেছে:</span>
+                <strong id="pFuelLiters">০ লিটার</strong>
+            </div>
+            <div class="result-item">
+                <span>জ্বালানি (তেল) খরচ:</span>
+                <strong id="pFuelCost" style="color: #d97706;">০ টাকা</strong>
+            </div>
+            <div class="result-item fare-highlight" id="passengerFareRow">
+                <span>প্রদেয় মোট ভাড়া:</span>
+                <strong id="pTotalFare">০ টাকা</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== পেজ ২: আপনার গোপন লাভের পেজ (Driver Only) ==================== -->
+    <div id="driverPage" class="hidden-page">
+        <div class="row-2">
+            <div class="input-group">
+                <label>তেলের দাম (লিটার)</label>
+                <input type="number" id="fuelPrice" value="163.6" step="any" oninput="calculateAll()">
+            </div>
+            <div class="input-group">
+                <label>বাইকের মাইলেজ</label>
+                <input type="number" id="mileage" value="48" step="any" oninput="calculateAll()">
+            </div>
+        </div>
+
+        <div class="row-2">
+            <div class="input-group">
+                <label>ভাড়ার ধরন</label>
+                <select id="fareType" onchange="changeFareType()">
+                    <option value="perKm">প্রতি কি.মি. রেট</option>
+                    <option value="fixed">চুক্তিতে (Fixed)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label id="fareLabel">প্রতি কি.মি. (টাকা)</label>
+                <input type="number" id="fareInput" value="25" step="any" oninput="calculateAll()">
+            </div>
+        </div>
+
+        <div class="input-group" id="emptyKmBox">
+            <label>খালি ফিরে আসার দূরত্ব (কি.মি.)</label>
+            <input type="number" id="emptyDistance" value="0" step="any" oninput="calculateAll()">
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="roundTrip" onchange="toggleEmptyBox()">
+            <label for="roundTrip">যাতায়াত (পুরো পথ খালি ফেরা / Round Trip)</label>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="showFareToPassenger" checked onchange="calculateAll()">
+            <label for="showFareToPassenger">যাত্রীর পেজে "মোট ভাড়া" দেখান</label>
+        </div>
+
+        <div class="result-box" style="display: block; background: #f0fdf4; border-color: #bbf7d0;">
+            <div class="result-item">
+                <span>যাত্রীর কাছ থেকে পাবেন:</span>
+                <strong id="dTotalFare" style="color: #2563eb;">০ টাকা</strong>
+            </div>
+            <div class="result-item">
+                <span>মোট দূরত্ব (যাওয়া + খালি ফেরা):</span>
+                <strong id="dTotalDist">০ কি.মি.</strong>
+            </div>
+            <div class="result-item">
+                <span>আপনার আসল তেল খরচ:</span>
+                <strong id="dTotalFuelCost" style="color: #dc2626;">০ টাকা</strong>
+            </div>
+            <div class="result-item profit-highlight" id="profitRow">
+                <span>আপনার নিট লাভ (টেকে):</span>
+                <strong id="dNetProfit">০ টাকা</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let watchId = null;
+    let lastLat = null;
+    let lastLon = null;
+    let totalGpsDistance = 0;
+    let wakeLock = null;
+    let isDriverPage = false;
+
+    function switchPage() {
+        isDriverPage = !isDriverPage;
+        const passengerPage = document.getElementById('passengerPage');
+        const driverPage = document.getElementById('driverPage');
+        const toggleBtn = document.getElementById('togglePageBtn');
+        const pageTitle = document.getElementById('pageTitle');
+
+        if (isDriverPage) {
+            passengerPage.classList.add('hidden-page');
+            driverPage.classList.remove('hidden-page');
+            toggleBtn.innerText = "⬅ যাত্রীর পেজ";
+            pageTitle.innerText = "ড্রাইভারের গোপন হিসাব";
+            calculateAll();
+        } else {
+            driverPage.classList.add('hidden-page');
+            passengerPage.classList.remove('hidden-page');
+            toggleBtn.innerText = "🔒 ড্রাইভার পেজ";
+            pageTitle.innerText = "বাইক ডিজিটাল মিটার";
+        }
+    }
+
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        } catch (err) {}
+    }
+
+    function startGPS() {
+        if (!navigator.geolocation) {
+            alert("আপনার ব্রাউজারে GPS সাপোর্ট করছে না!");
+            return;
+        }
+        requestWakeLock();
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('gpsDot').classList.add('active');
+        document.getElementById('gpsStatusText').innerText = "GPS সিগন্যাল খুঁজছে...";
+
+        watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                const speed = position.coords.speed;
+
+                document.getElementById('gpsStatusText').innerText = `GPS চালু আছে`;
+                document.getElementById('liveSpeed').innerText = speed ? (speed * 3.6).toFixed(0) : 0;
+
+                if (accuracy > 50) return;
+
+                if (lastLat !== null && lastLon !== null) {
+                    const dist = getDistanceFromLatLonInKm(lastLat, lastLon, lat, lon);
+                    if (dist >= 0.003) {
+                        totalGpsDistance += dist;
+                        lastLat = lat;
+                        lastLon = lon;
+                    }
+                } else {
+                    lastLat = lat;
+                    lastLon = lon;
+                }
+
+                document.getElementById('liveDist').innerText = totalGpsDistance.toFixed(2);
+                document.getElementById('distance').value = totalGpsDistance.toFixed(2);
+                calculateAll();
+            },
+            (error) => {
+                alert("ফোনের Location (GPS) অন করুন।");
+                stopGPS();
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        );
+    }
+
+    function stopGPS() {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        if (wakeLock !== null) {
+            wakeLock.release();
+            wakeLock = null;
+        }
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('stopBtn').style.display = 'none';
+        document.getElementById('gpsDot').classList.remove('active');
+        document.getElementById('gpsStatusText').innerText = "ট্রিপ শেষ হয়েছে";
+        document.getElementById('liveSpeed').innerText = "0";
+        calculateAll();
+    }
+
+    function resetGPS() {
+        stopGPS();
+        totalGpsDistance = 0;
+        lastLat = null;
+        lastLon = null;
+        document.getElementById('liveDist').innerText = "0.00";
+        document.getElementById('liveFuelCost').innerText = "0";
+        document.getElementById('liveSpeed').innerText = "0";
+        document.getElementById('distance').value = "";
+        document.getElementById('gpsStatusText').innerText = "GPS রেডি আছে";
+        document.getElementById('passengerResultBox').style.display = 'none';
+        calculateAll();
+    }
+
+    function changeFareType() {
+        const fareType = document.getElementById('fareType').value;
+        document.getElementById('fareLabel').innerText = (fareType === 'perKm') ? 'প্রতি কি.মি. (টাকা)' : 'চুক্তির ভাড়া (টাকা)';
+        document.getElementById('fareInput').value = (fareType === 'perKm') ? '25' : '250';
+        calculateAll();
+    }
+
+    function toggleEmptyBox() {
+        const isRoundTrip = document.getElementById('roundTrip').checked;
+        document.getElementById('emptyKmBox').style.display = isRoundTrip ? 'none' : 'block';
+        calculateAll();
+    }
+
+    function calculateAll() {
+        const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
+        const mileage = parseFloat(document.getElementById('mileage').value) || 1;
+        const tripDistance = parseFloat(document.getElementById('distance').value) || 0;
+        const emptyDistance = parseFloat(document.getElementById('emptyDistance').value) || 0;
+        const fareType = document.getElementById('fareType').value;
+        const fareInput = parseFloat(document.getElementById('fareInput').value) || 0;
+        const isRoundTrip = document.getElementById('roundTrip').checked;
+        const showFare = document.getElementById('showFareToPassenger').checked;
+
+        const passengerFuelLiters = tripDistance / mileage;
+        const passengerFuelCost = passengerFuelLiters * fuelPrice;
+        const totalFare = (fareType === 'perKm') ? (tripDistance * fareInput) : fareInput;
+
+        document.getElementById('liveFuelCost').innerText = Math.round(passengerFuelCost);
+
+        if (tripDistance > 0) {
+            document.getElementById('pDistText').innerText = tripDistance.toFixed(2) + " কি.মি.";
+            document.getElementById('pFuelLiters').innerText = passengerFuelLiters.toFixed(2) + " লিটার";
+            document.getElementById('pFuelCost').innerText = passengerFuelCost.toFixed(0) + " টাকা";
+            document.getElementById('pTotalFare').innerText = totalFare.toFixed(0) + " টাকা";
+            document.getElementById('passengerFareRow').style.display = showFare ? 'flex' : 'none';
+            document.getElementById('passengerResultBox').style.display = 'block';
+        }
+
+        const driverTotalDist = isRoundTrip ? (tripDistance * 2) : (tripDistance + emptyDistance);
+        const driverFuelCost = (driverTotalDist / mileage) * fuelPrice;
+        const netProfit = totalFare - driverFuelCost;
+
+        document.getElementById('dTotalFare').innerText = totalFare.toFixed(0) + " টাকা";
+        document.getElementById('dTotalDist').innerText = driverTotalDist.toFixed(2) + " কি.মি.";
+        document.getElementById('dTotalFuelCost').innerText = driverFuelCost.toFixed(0) + " টাকা";
+        document.getElementById('dNetProfit').innerText = netProfit.toFixed(0) + " টাকা";
+        document.getElementById('profitRow').style.color = netProfit < 0 ? "#dc2626" : "#16a34a";
+    }
+</script>
+
+</body>
+</html>
